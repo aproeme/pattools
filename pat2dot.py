@@ -28,13 +28,13 @@ def genDotStr(cgdict):
     """ Convert a dictionary of a callgraph into a .dot file string. """
 
     dotstr = "digraph {\n"
-    for lvl in cg.keys():
-        for node in cg[lvl]:
+    for lvl in cgdict.keys():
+        for node in cgdict[lvl]:
             label = node.shortName() + "<BR />" + node.cost
             dotstr += angleStr(node.name) + ' [label=' + angleStr(label) + '];\n'
 
-    for lvl in cg.keys():
-        for node in cg[lvl]:
+    for lvl in cgdict.keys():
+        for node in cgdict[lvl]:
             for callee in node.callees:
                 dotstr += angleStr(node.name) + ' -> ' + angleStr(callee.name) + ';\n' 
     dotstr += "}"
@@ -74,7 +74,7 @@ def genCGcsv(filename):
 
     return cgname
 
-def main(filename="jm76.ct"):
+def main(filename="jm51.ct"):
     """ Given a csv-formatted CrayPAT callgraph, generate a .dot file of the callgraph. """
     cgname = genCGcsv(filename)
     cg = readCGcsv(cgname)
