@@ -1,9 +1,10 @@
-#
-#        FILE: pat2csv.py
-#      AUTHOR: Paul Bartholomew
-# DESCRIPTION: pat_report -s show_data="csv" will format tables as csv embedded within a text file - not very useful!
-#              This program will extract each table into its own .csv file.
-#
+"""
+       FILE: pat2csv.py
+DESCRIPTION: pat_report -s show_data="csv" will format tables as csv embedded within a text file -
+             not very useful!  This program will extract each table into its own .csv file.
+"""
+
+from pattools.cmdin import parser
 
 def isnum(a):
     """ Test if a string is all numbers [0-9]. """
@@ -19,19 +20,20 @@ def readTable(filehandle):
             words = line.split()[0].split(',')
         else:
             continue
+
         if (words[0] != "Level") and (not isnum(words[0])):
             # We've reached the end of the table
             break
-        else:
-            tabstr += line
+
+        tabstr += line
 
     return tabstr
-            
+
 def tableName(line):
     """ Generate the name of the table. """
     words = line.split()
 
-    tableNum = words[1].replace(":","")
+    tableNum = words[1].replace(":", "")
     tname = "Table" + tableNum
     for w in words[2:]:
         tname += "-" + w
@@ -55,12 +57,15 @@ def getTables(filename):
 
     return tables
 
-def main(filename="jm76.ct"):
+def main(infile):
 
-    tables = getTables(filename)
+    tables = getTables(infile)
 
-    for t in tables.keys():
+    for t in tables:
         with open(t, "w") as tfile:
             tfile.write(tables[t])
+
 if __name__ == "__main__":
-    main()
+
+    args = parser.parse_args()
+    main(args.input)

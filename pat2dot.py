@@ -1,10 +1,13 @@
-#
-# FILE: pat2dot.py
-#
+"""
+       FILE: pat2dot.py
+DESCRIPTION: Converts a csv-formatted callgraph produced by CrayPAT to a .dot file for
+             processing by dot (a graphviz program).
+"""
 
 import csv
 
 from pattools.pat2csv import getTables
+from pattools.cmdin import parser
 
 class CGNode():
     """ Class representing a node on a callgraph. """
@@ -15,9 +18,14 @@ class CGNode():
         self.callees = []
 
     def addCallee(self, callee):
+        """ Add a callee to this node. """
         self.callees.append(callee)
 
     def shortName(self):
+        """ CrayPAT callgraphs come like a filepath - the called function is at the end of the
+            path.
+        """
+
         return self.name.split('/')[-1]
 
 def angleStr(s):
@@ -36,7 +44,7 @@ def genDotStr(cgdict):
     for lvl in cgdict.keys():
         for node in cgdict[lvl]:
             for callee in node.callees:
-                dotstr += angleStr(node.name) + ' -> ' + angleStr(callee.name) + ';\n' 
+                dotstr += angleStr(node.name) + ' -> ' + angleStr(callee.name) + ';\n'
     dotstr += "}"
 
     return dotstr
@@ -44,7 +52,7 @@ def genDotStr(cgdict):
 def readCGcsv(filename):
     """ Read a .csv file of a callgraph into a dictionary keyed by callgraph level. """
 
-    cg = {}
+    cgdict = {}
     with open(filename, "r") as cgcsv:
         cgreader = csv.DictReader(cgcsv)
 
@@ -54,13 +62,13 @@ def readCGcsv(filename):
             fname = row[r'Calltree/PE=HIDE']
 
             node = CGNode(fname, cost)
-            if not lvl in cg.keys():
-                cg[lvl] = []
-            cg[lvl].append(node)
+            if lvl not in cgdict.keys():
+                cgdict[lvl] = []
+            cgdict[lvl].append(node)
             if lvl > 0:
-                cg[lvl - 1][-1].addCallee(node)
+                cgdict[lvl - 1][-1].addCallee(node)
 
-    return cg
+    return cgdict
 
 def genCGcsv(filename):
     """ Read a csv-formatted CrayPAT callgraph and write out as .csv file """
@@ -74,14 +82,21 @@ def genCGcsv(filename):
 
     return cgname
 
-def main(filename="jm51.ct"):
+def main(infile, outfile):
     """ Given a csv-formatted CrayPAT callgraph, generate a .dot file of the callgraph. """
-    cgname = genCGcsv(filename)
-    cg = readCGcsv(cgname)
-    dotstr = genDotStr(cg)
+    cgname = genCGcsv(infile)
+    cgdict = readCGcsv(cgname)
+    dotstr = genDotStr(cgdict)
 
-    with open ("jm76.dot", "w") as cgdot:
+    with open(outfile, "w") as cgdot:
         cgdot.write(dotstr)
 
 if __name__ == "__main__":
-    main()
+
+    parser.add_argument("-o",
+                        dest='output',
+                        type=str,
+                        required=True,
+                        help="The file to write dot file to.")
+    args = parser.parse_args()
+    main(args.input, args.output)
