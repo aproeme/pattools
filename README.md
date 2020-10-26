@@ -65,6 +65,8 @@ python /path/to/pat2csv.py -i prog.pat-csv
 this will generate multiple files of the form `TableX-YYYY.csv` that can then be processed in
 whatever manner you like.
 
+### Producing call graphs
+
 `pat_report` is also capable of producing call graphs, `pat2dot.py` converts these into a `.dot`
 file for later processing by the `dot` program from graphviz:
 
