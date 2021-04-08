@@ -80,3 +80,17 @@ The dot file can then be used to create a graphical callgraph in multiple format
 ```
 dot -Tpng -o prog.png prog.dot
 ```
+
+### Measuring communication ratios
+
+After running `pat_report` the profile directory can be opened in Apprentice2 (`app2` on the command
+line) to explore graphically.
+One of the reports presented by Apprentice2 is the "communications mosaic" which displays various
+MPI metrics between processors.
+Using the export to csv functionality this can then be processed by the `patmat.py` tool to compute
+the on-node/total ratio for the given metric, to do so it requires the generated .csv file and the
+size of each node in terms of MPI ranks, e.g. for a 128-rank node:
+```
+patmat.py -i mosaic-data.csv -n 128
+```
+this reports the per-node and min, mean and max ratios for the metric.
