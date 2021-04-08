@@ -3,7 +3,7 @@
 DESCRIPTION: Converts a csv-formatted callgraph produced by CrayPAT to a .dot file for
              processing by dot (a graphviz program).
 
-Copyright 2020 The University of Edinburgh
+Copyright 2020-2021 The University of Edinburgh
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

@@ -3,7 +3,7 @@
 DESCRIPTION: pat_report -s show_data="csv" will format tables as csv embedded within a text file.
              This program will extract each table into its own .csv file.
 
-Copyright 2020 The University of Edinburgh
+Copyright 2020-2021 The University of Edinburgh
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

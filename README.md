@@ -1,4 +1,4 @@
-Copyright (c) 2020 The University of Edinburgh.
+Copyright (c) 2020-2021 The University of Edinburgh.
 
 This software was developed as part of the
 EPSRC funded project ASiMoV (Project ID: EP/S005072/1)

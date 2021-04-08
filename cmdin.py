@@ -2,7 +2,7 @@
        FILE: cmdin.py
 DESCRIPTION: Provides a common command parser for pattools.
 
-Copyright 2020 The University of Edinburgh
+Copyright 2020-2021 The University of Edinburgh
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
