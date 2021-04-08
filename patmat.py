@@ -59,7 +59,7 @@ def parse_mosaic(infile, node_ranks):
     return ratios
 
 def report(ratios):
-
+    """ Report the metric ratio across nodes and the min, mean and max. """
     avg = 0
     rmin = 1
     rmax = 0
