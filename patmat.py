@@ -23,7 +23,7 @@ from pattools.cmdin import parser
 
 def add_node(nodearr, node):
 
-    while (node <= len(nodearr)):
+    while (node >= len(nodearr)):
 
         nodearr.append(0)
 
@@ -45,17 +45,17 @@ def parse_mosaic(infile, node_ranks):
             dest = int(words[1])
             metric = float(words[2])
 
-            onnode = (onnode, source_node)
-            totnode = (totnode, source_node)
             source_node = source // node_ranks
             dest_node = dest // node_ranks
+            onnode = add_node(onnode, source_node)
+            totnode = add_node(totnode, source_node)
             totnode[source_node] += metric
             if (dest_node == source_node):
                 onnode[source_node] += metric
 
     ratios = []
     for n in range(len(onnode)):
-        ratios[n] = onnode[n] / totnode[n]
+        ratios.append(onnode[n] / totnode[n])
     return ratios
 
 def report(ratios):
@@ -63,7 +63,7 @@ def report(ratios):
     avg = 0
     for n in range(len(ratios)):
 
-        msg = "Node " + str(n) + ": " + ratios[n]
+        msg = "Node " + str(n) + ": " + str(ratios[n])
         print(msg)
         avg += ratios[n]
 
