@@ -61,13 +61,25 @@ def parse_mosaic(infile, node_ranks):
 def report(ratios):
 
     avg = 0
+    rmin = 1
+    rmax = 0
     for n in range(len(ratios)):
 
-        msg = "Node " + str(n) + ": " + str(ratios[n])
+        r = ratios[n]
+        msg = "Node " + str(n) + ": " + str(r)
         print(msg)
-        avg += ratios[n]
+        avg += r
+        if r > rmax:
+            rmax = r
+        if r < rmin:
+            rmin = r    
 
-    print(avg / len(ratios))
+    msg = "Min: " + str(rmin)
+    print(msg)
+    msg = "Mean: " + str(avg / len(ratios))
+    print(msg)
+    msg = "Max: " + str(rmax)
+    print(msg)
     
 def main(infile, node_ranks):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
