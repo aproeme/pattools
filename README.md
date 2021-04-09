@@ -93,4 +93,4 @@ size of each node in terms of MPI ranks, e.g. for a 128-rank per node system:
 ```
 patmat.py -i mosaic-data.csv -n 128
 ```
-this reports the per-node and min, mean and max ratios for the metric.
+this reports the per-node and min, max, mean and standard deviation of the metric ratios.
