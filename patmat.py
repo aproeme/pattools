@@ -26,8 +26,7 @@ from pattools.cmdin import parser
 def add_node(nodearr, node, nranks):
 
     while (node >= len(nodearr)):
-
-        nodearr.append([] * nranks)
+        nodearr.append([0 for i in range(nranks)])
 
     return nodearr
 
@@ -38,6 +37,11 @@ def parse_mosaic(infile, node_ranks):
 
     onnode = []
     totnode = []
+
+    def shift_rank(rank, node):
+        
+        return rank - node * node_ranks
+
     def parse_entry(onnode, totnode, row):
 
         words = row.split(",")
@@ -51,6 +55,7 @@ def parse_mosaic(infile, node_ranks):
         onnode = add_node(onnode, source_node, node_ranks)
         totnode = add_node(totnode, source_node, node_ranks)
 
+        source = shift_rank(source, source_node)
         totnode[source_node][source] += metric
         if (dest_node == source_node):
             onnode[source_node][source] += metric
@@ -61,7 +66,7 @@ def parse_mosaic(infile, node_ranks):
 
         ratios = []
         for n in range(len(onnode)):
-            ratios.append([] * node_ranks)
+            ratios.append([0 for r in range(node_ranks)])
             for r in range(node_ranks):
 
                 ratios[n][r] = onnode[n][r] / totnode[n][r]
@@ -79,8 +84,10 @@ def parse_mosaic(infile, node_ranks):
 def report(ratios):
     """ Report the metric ratio across nodes and the min, mean and max. """
 
+    print("On-node/total-node comms ratios:")
+    print(" min, max, mean, stddev")
+    print("--------------------------------")
     nnodes = len(ratios)
-
     for n in range(nnodes):
 
         rmin = min(ratios[n])
@@ -88,9 +95,7 @@ def report(ratios):
         rmean = np.mean(ratios[n])
         rstd = np.std(ratios[n])
 
-        msg = "Node " + str(n) + ": " + str(rmin) + ", " + str(rmax) + ", " \
-            + str(rmean) + ", " + str(rstd)
-        print(msg)
+        print(f"Node {n}: {rmin:.6e}, {rmax:.6e}, {rmean:.6e}, {rstd:.6e}")
         
 def main(infile, node_ranks):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
