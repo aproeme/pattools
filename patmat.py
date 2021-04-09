@@ -19,68 +19,79 @@ Copyright 2021 The University of Edinburgh
    limitations under the License.
 """
 
+import numpy as np
+
 from pattools.cmdin import parser
 
-def add_node(nodearr, node):
+def add_node(nodearr, node, nranks):
 
     while (node >= len(nodearr)):
 
-        nodearr.append(0)
+        nodearr.append([] * nranks)
 
     return nodearr
 
+    
 def parse_mosaic(infile, node_ranks):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
     ratio. """
 
     onnode = []
     totnode = []
+    def parse_entry(onnode, totnode, row):
+
+        words = row.split(",")
+
+        source = int(words[0])
+        dest = int(words[1])
+        metric = float(words[2])
+
+        source_node = source // node_ranks
+        dest_node = dest // node_ranks
+        onnode = add_node(onnode, source_node, node_ranks)
+        totnode = add_node(totnode, source_node, node_ranks)
+
+        totnode[source_node][source] += metric
+        if (dest_node == source_node):
+            onnode[source_node][source] += metric
+
+        return onnode, totnode
+
+    def compute_ratios(onnode, totnode):
+
+        ratios = []
+        for n in range(len(onnode)):
+            ratios.append([] * node_ranks)
+            for r in range(node_ranks):
+
+                ratios[n][r] = onnode[n][r] / totnode[n][r]
+
+        return ratios
+
     with open(infile, "r") as csvfile:
         next(csvfile) # Skip the header
         for row in csvfile:
 
-            words = row.split(",")
+            onnode, totnode = parse_entry(onnode, totnode, row)
 
-            source = int(words[0])
-            dest = int(words[1])
-            metric = float(words[2])
-
-            source_node = source // node_ranks
-            dest_node = dest // node_ranks
-            onnode = add_node(onnode, source_node)
-            totnode = add_node(totnode, source_node)
-            totnode[source_node] += metric
-            if (dest_node == source_node):
-                onnode[source_node] += metric
-
-    ratios = []
-    for n in range(len(onnode)):
-        ratios.append(onnode[n] / totnode[n])
-    return ratios
+    return compute_ratios(onnode, totnode)
 
 def report(ratios):
     """ Report the metric ratio across nodes and the min, mean and max. """
-    avg = 0
-    rmin = 1
-    rmax = 0
-    for n in range(len(ratios)):
 
-        r = ratios[n]
-        msg = "Node " + str(n) + ": " + str(r)
+    nnodes = len(ratios)
+
+    for n in range(nnodes):
+
+        rmin = min(ratios[n])
+        rmax = max(ratios[n])
+        rmean = np.mean(ratios[n])
+        rstd = np.std(ratios[n])
+
+        msg = "Node " + str(n) + ": " + str(rmin) + ", " + str(rmax) + ", " \
+            + str(rmean) + ", " + str(rstd)
         print(msg)
-        avg += r
-        if r > rmax:
-            rmax = r
-        if r < rmin:
-            rmin = r    
-
-    msg = "Min: " + str(rmin)
-    print(msg)
-    msg = "Mean: " + str(avg / len(ratios))
-    print(msg)
-    msg = "Max: " + str(rmax)
-    print(msg)
-    
+        
 def main(infile, node_ranks):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
     ratio. """
