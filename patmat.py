@@ -30,11 +30,31 @@ def add_node(nodearr, node, nranks):
 
     return nodearr
 
-    
-def parse_mosaic(infile, node_ranks):
-    """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
-    ratio. """
+def read_mosaic(infile):
+    """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, convert to array of data. """
 
+    mosaic = []
+    
+    with open(infile, "r") as csvfile:
+        next(csvfile) # Skip the header
+        for row in csvfile:
+
+            words = row.split(",")
+
+            source = int(words[0])
+            dest = int(words[1])
+            metric = float(words[2])
+
+            while (source >= len(mosaic)):
+                mosaic.append([])
+            mosaic[source].append(dest)
+            mosaic[source].append(metric)
+
+    return mosaic
+
+def parse_mosaic(mosaic, node_ranks):
+    """ Given an Apprentice2 mosaic and nodes of size n, parse into on-node and total-node data. """
+    
     onnode = []
     totnode = []
 
@@ -42,44 +62,43 @@ def parse_mosaic(infile, node_ranks):
         
         return rank - node * node_ranks
 
-    def parse_entry(onnode, totnode, row):
-
-        words = row.split(",")
-
-        source = int(words[0])
-        dest = int(words[1])
-        metric = float(words[2])
+    def parse_entry(onnode, totnode, source, sourcedata):
 
         source_node = source // node_ranks
-        dest_node = dest // node_ranks
-        onnode = add_node(onnode, source_node, node_ranks)
-        totnode = add_node(totnode, source_node, node_ranks)
 
-        source = shift_rank(source, source_node)
-        totnode[source_node][source] += metric
-        if (dest_node == source_node):
-            onnode[source_node][source] += metric
+        ndest = len(sourcedata) // 2
+        for d in range(ndest):
+
+            dest = sourcedata[2 * d]
+            metric = sourcedata[2 * d + 1]
+            
+            dest_node = dest // node_ranks
+            onnode = add_node(onnode, source_node, node_ranks)
+            totnode = add_node(totnode, source_node, node_ranks)
+
+            sourceloc = shift_rank(source, source_node)
+            totnode[source_node][sourceloc] += metric
+            if (dest_node == source_node):
+                onnode[source_node][sourceloc] += metric
 
         return onnode, totnode
 
-    def compute_ratios(onnode, totnode):
+    for e in range(len(mosaic)):
 
-        ratios = []
-        for n in range(len(onnode)):
-            ratios.append([0 for r in range(node_ranks)])
-            for r in range(node_ranks):
+        onnode, totnode = parse_entry(onnode, totnode, e, mosaic[e])
+        
+    return onnode, totnode
 
-                ratios[n][r] = onnode[n][r] / totnode[n][r]
+def compute_ratios(onnode, totnode, node_ranks):
 
-        return ratios
+    ratios = []
+    for n in range(len(onnode)):
+        ratios.append([0 for r in range(node_ranks)])
+        for r in range(node_ranks):
 
-    with open(infile, "r") as csvfile:
-        next(csvfile) # Skip the header
-        for row in csvfile:
+            ratios[n][r] = onnode[n][r] / totnode[n][r]
 
-            onnode, totnode = parse_entry(onnode, totnode, row)
-
-    return compute_ratios(onnode, totnode)
+    return ratios
 
 def report(ratios):
     """ Report the metric ratio across nodes and the min, mean and max. """
@@ -97,12 +116,20 @@ def report(ratios):
 
         print(f"Node {n}: {rmin:.6e}, {rmax:.6e}, {rmean:.6e}, {rstd:.6e}")
         
-def main(infile, node_ranks):
+def main(infile, node_ranks, outfile, mode):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
     ratio. """
 
-    ratios = parse_mosaic(infile, node_ranks)
-    report(ratios)
+    mosaic = read_mosaic(infile)
+
+    if (mode == "ratio"):
+        onnode, totnode = parse_mosaic(mosaic, node_ranks)
+        ratios = compute_ratios(onnode, totnode, node_ranks)
+        report(ratios)
+    else:
+        if (outfile == None):
+            raise RuntimeError("You need to provide an outfile to plot to!")
+        plot_mosaic(mosaic, outfile)
     
 if __name__ == "__main__":
 
@@ -111,5 +138,17 @@ if __name__ == "__main__":
                         type=int,
                         required=True,
                         help="The number of ranks per node of the system.")
+    parser.add_argument("-o",
+                        dest='outfile',
+                        type=str,
+                        required=False,
+                        default=None,
+                        help="The file mosaic plot should be saved to.")
+    parser.add_argument("-m",
+                        dest='mode',
+                        type=str,
+                        required=False,
+                        default="ratio",
+                        help="The mode (plot|ratio) - plot plots the mosaic, ratio computes the on-node fraction of the metric.")
     args = parser.parse_args()
-    main(args.input, args.node_ranks)
+    main(args.input, args.node_ranks, args.outfile, args.mode)
