@@ -42,11 +42,11 @@ def mosaic_to_mat(mosaic):
 def plot_mosaic(mosaic, outfile, node_ranks):
     """ Given a mosaic, plot it to outfile. """
 
-    cmap = cm.plasma_r
+    cmap = cm.autumn_r
     cmap.set_under(color="white")
     M = mosaic_to_mat(mosaic)
     plt.matshow(M, cmap=cmap,
-                vmin=1.0e-6)
+                vmin=1.0e-10)
     plt.colorbar()
     plt.xlabel("Destination")
     plt.ylabel("Source")
@@ -54,7 +54,7 @@ def plot_mosaic(mosaic, outfile, node_ranks):
     ax = plt.gca()
     ax.xaxis.set_major_locator(MultipleLocator(node_ranks))
     ax.yaxis.set_major_locator(MultipleLocator(node_ranks))
-    plt.grid(True, color="red")
+    plt.grid(True, color="black")
     
     plt.savefig(outfile)
 
