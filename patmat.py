@@ -19,9 +19,31 @@ Copyright 2021 The University of Edinburgh
    limitations under the License.
 """
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 
 from pattools.cmdin import parser
+
+def mosaic_to_mat(mosaic):
+
+    N = len(mosaic)
+    m = np.zeros((N, N))
+    for i in range(N):
+        for d in range(len(mosaic[i]) // 2):
+            j = mosaic[i][2 * d]
+            m[i][j] = mosaic[i][2 * d + 1]
+
+    return m
+    
+def plot_mosaic(mosaic, outfile):
+    """ Given a mosaic, plot it to outfile. """
+
+    plt.matshow(mosaic_to_mat(mosaic), cmap="YlGnBu")
+    plt.colorbar()
+    plt.xlabel("Destination")
+    plt.ylabel("Source")
+    plt.savefig(outfile)
 
 def add_node(nodearr, node, nranks):
 
