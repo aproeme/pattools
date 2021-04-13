@@ -91,6 +91,16 @@ Using the export to csv functionality this can then be processed by the `patmat.
 the on-node/total ratio for the given metric, to do so it requires the generated .csv file and the
 size of each node in terms of MPI ranks, e.g. for a 128-rank per node system:
 ```
-patmat.py -i mosaic-data.csv -n 128
+python patmat.py -i mosaic-data.csv -n 128
 ```
 this reports the per-node and min, max, mean and standard deviation of the metric ratios.
+
+### Plotting communication ratios
+
+Alternatively you can plot the communications mosaic, to do so, reuse the `patmat.py` program and
+pass the additional flags `-m plot` to set the mode (default is `-m ratio`) and `-m image.fmt`:
+```
+python patmat.py -i mosaic-data.csv -n 128 -m plot -o mosaic.png
+```
+this will output a mosaic like the one displayed in Apprentice2 with a grid overlay showing the node
+extents, any image format supported by matplotlib should also be supported by this tool.
