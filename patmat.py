@@ -20,6 +20,7 @@ Copyright 2021 The University of Edinburgh
 """
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 
 import numpy as np
 
@@ -36,13 +37,19 @@ def mosaic_to_mat(mosaic):
 
     return m
     
-def plot_mosaic(mosaic, outfile):
+def plot_mosaic(mosaic, outfile, node_ranks):
     """ Given a mosaic, plot it to outfile. """
 
     plt.matshow(mosaic_to_mat(mosaic), cmap="YlGnBu")
     plt.colorbar()
     plt.xlabel("Destination")
     plt.ylabel("Source")
+
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(MultipleLocator(node_ranks))
+    ax.yaxis.set_major_locator(MultipleLocator(node_ranks))
+    plt.grid(True, color="red")
+    
     plt.savefig(outfile)
 
 def add_node(nodearr, node, nranks):
@@ -151,7 +158,7 @@ def main(infile, node_ranks, outfile, mode):
     else:
         if (outfile == None):
             raise RuntimeError("You need to provide an outfile to plot to!")
-        plot_mosaic(mosaic, outfile)
+        plot_mosaic(mosaic, outfile, node_ranks)
     
 if __name__ == "__main__":
 
