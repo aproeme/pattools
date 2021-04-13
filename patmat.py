@@ -19,8 +19,10 @@ Copyright 2021 The University of Edinburgh
    limitations under the License.
 """
 
+from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+from matplotlib.colors import ListedColormap, SymLogNorm
 
 import numpy as np
 
@@ -40,7 +42,11 @@ def mosaic_to_mat(mosaic):
 def plot_mosaic(mosaic, outfile, node_ranks):
     """ Given a mosaic, plot it to outfile. """
 
-    plt.matshow(mosaic_to_mat(mosaic), cmap="YlGnBu")
+    cmap = cm.plasma_r
+    cmap.set_under(color="white")
+    M = mosaic_to_mat(mosaic)
+    plt.matshow(M, cmap=cmap,
+                vmin=1.0e-6)
     plt.colorbar()
     plt.xlabel("Destination")
     plt.ylabel("Source")
