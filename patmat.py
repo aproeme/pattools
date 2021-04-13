@@ -46,7 +46,7 @@ def plot_mosaic(mosaic, outfile, node_ranks):
     cmap.set_under(color="white")
     M = mosaic_to_mat(mosaic)
     plt.matshow(M, cmap=cmap,
-                vmin=1.0e-10)
+                vmin=1.0e-6)
     plt.colorbar()
     plt.xlabel("Destination")
     plt.ylabel("Source")
