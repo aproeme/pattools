@@ -22,13 +22,15 @@ Copyright 2021 The University of Edinburgh
 from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from matplotlib.colors import ListedColormap, SymLogNorm
+from matplotlib.colors import ListedColormap, LogNorm
 
 import numpy as np
 
 from pattools.cmdin import parser
 
-def mosaic_to_mat(mosaic):
+SHIFT=1.0e-8 # Values will be shifted by this amount
+
+def mosaic_to_mat(mosaic, shift):
 
     N = len(mosaic)
     m = np.zeros((N, N))
@@ -36,17 +38,29 @@ def mosaic_to_mat(mosaic):
         for d in range(len(mosaic[i]) // 2):
             j = mosaic[i][2 * d]
             m[i][j] = mosaic[i][2 * d + 1]
+            m[i][j] += shift # Shift zeros to enable logarithmic colour scales
 
     return m
-    
+
+def vmin(M, tol=1.0e-7):
+
+    vmin = np.amax(M)
+    for i in range(M.shape[0]):
+        for j in range(M.shape[1]):
+            v = M[i][j]
+            if ((v > tol) and (v < vmin)):
+                vmin = v
+
+    return vmin
+
 def plot_mosaic(mosaic, outfile, node_ranks):
     """ Given a mosaic, plot it to outfile. """
 
-    cmap = cm.autumn_r
+    cmap = cm.plasma_r
     cmap.set_under(color="white")
-    M = mosaic_to_mat(mosaic)
+    M = mosaic_to_mat(mosaic, SHIFT)
     plt.matshow(M, cmap=cmap,
-                vmin=1.0e-6)
+                norm=LogNorm(vmin=vmin(M, 10*SHIFT)))
     plt.colorbar()
     plt.xlabel("Destination")
     plt.ylabel("Source")
