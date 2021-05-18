@@ -53,7 +53,7 @@ def vmin(M, tol=1.0e-7):
 
     return vmin
 
-def plot_mosaic(mosaic, outfile, node_ranks):
+def plot_mosaic(mosaic, outfile, node_ranks, coarsen):
     """ Given a mosaic, plot it to outfile. """
 
     cmap = cm.plasma_r
@@ -73,10 +73,11 @@ def plot_mosaic(mosaic, outfile, node_ranks):
     plt.xlabel("Destination")
     plt.ylabel("Source")
 
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(MultipleLocator(node_ranks))
-    ax.yaxis.set_major_locator(MultipleLocator(node_ranks))
-    plt.grid(True, color="black")
+    if not coarsen:
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(MultipleLocator(node_ranks))
+        ax.yaxis.set_major_locator(MultipleLocator(node_ranks))
+        plt.grid(True, color="black")
     
     plt.savefig(outfile)
 
@@ -87,7 +88,7 @@ def add_node(nodearr, node, nranks):
 
     return nodearr
 
-def read_mosaic(infile):
+def read_mosaic(infile, node_ranks, coarsen):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, convert to array of data. """
 
     mosaic = []
@@ -102,10 +103,24 @@ def read_mosaic(infile):
             dest = int(words[1])
             metric = float(words[2])
 
+            if coarsen:
+
+                source = source // node_ranks
+                dest = dest // node_ranks
+
             while (source >= len(mosaic)):
                 mosaic.append([])
-            mosaic[source].append(dest)
-            mosaic[source].append(metric)
+
+            dest_found = False
+            for d in range(len(mosaic[source]) // 2):
+                if mosaic[source][2 * d] == dest:
+                    dest_found = True
+                    break
+            if not dest_found:
+                mosaic[source].append(dest)
+                mosaic[source].append(metric)
+            else:
+                mosaic[source][2 * d + 1] += metric
 
     return mosaic
 
@@ -182,13 +197,16 @@ def delta_mosaic(ref_mosaic, test_mosaic):
 
     return mosaic_to_mat(ref_mosaic, SHIFT) - mosaic_to_mat(test_mosaic, SHIFT)
 
-def main(infile, node_ranks, outfile, mode, secondary):
+def main(infile, node_ranks, outfile, mode, secondary, coarsen):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
     ratio. """
 
-    mosaic = read_mosaic(infile)
+    mosaic = read_mosaic(infile, node_ranks, coarsen)
 
     if (mode == "ratio"):
+        if coarsen:
+            msg = "Ratio mode doesn't currently support coarsening"
+            raise RuntimeError(msg)
         onnode, totnode = parse_mosaic(mosaic, node_ranks)
         ratios = compute_ratios(onnode, totnode, node_ranks)
         report(ratios)
@@ -196,11 +214,11 @@ def main(infile, node_ranks, outfile, mode, secondary):
         if (outfile == None):
             raise RuntimeError("You need to provide an outfile to plot to!")
         if (mode == "delta"):
-            test_mosaic = read_mosaic(secondary)
+            test_mosaic = read_mosaic(secondary, node_ranks, coarsen)
             delta = delta_mosaic(mosaic, test_mosaic)
-            plot_mosaic(delta, outfile, node_ranks)
+            plot_mosaic(delta, outfile, node_ranks, coarsen)
         else:
-            plot_mosaic(mosaic, outfile, node_ranks)
+            plot_mosaic(mosaic, outfile, node_ranks, coarsen)
     
 if __name__ == "__main__":
 
@@ -227,5 +245,12 @@ if __name__ == "__main__":
                         required=False,
                         default=None,
                         help="A second mosaic to compare against the input, for use with 'delta' mode.")
+    parser.add_argument("-c",
+                        dest='coarsen',
+                        # type=bool,
+                        required=False,
+                        default=False,
+                        action='store_true',
+                        help="Perform coarsening of the comms graph to the per-node level (default: False)")
     args = parser.parse_args()
-    main(args.input, args.node_ranks, args.outfile, args.mode, args.secondary)
+    main(args.input, args.node_ranks, args.outfile, args.mode, args.secondary, args.coarsen)

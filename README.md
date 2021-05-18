@@ -107,7 +107,12 @@ extents, any image format supported by matplotlib should also be supported by th
 
 #### Plotting communication ratio deltas
 
-When comparing two partitioning options you can plot the difference between the two as followsa:
+When comparing two partitioning options you can plot the difference between the two as follows:
 ```
 python patmat.py -i mosaic-data.csv -n 128 -m delta -s mosaic2-data -o mosaic-delta.png
 ```
+
+#### Plotting very large communication graphs
+
+For very large communication graphs you can coarsen the plot to plot only the inter-node
+communications metric by adding the `-c` flag.
