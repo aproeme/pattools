@@ -104,3 +104,10 @@ python patmat.py -i mosaic-data.csv -n 128 -m plot -o mosaic.png
 ```
 this will output a mosaic like the one displayed in Apprentice2 with a grid overlay showing the node
 extents, any image format supported by matplotlib should also be supported by this tool.
+
+#### Plotting communication ratio deltas
+
+When comparing two partitioning options you can plot the difference between the two as followsa:
+```
+python patmat.py -i mosaic-data.csv -n 128 -m delta -s mosaic2-data -o mosaic-delta.png
+```

@@ -22,7 +22,7 @@ Copyright 2021 The University of Edinburgh
 from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from matplotlib.colors import ListedColormap, LogNorm
+from matplotlib.colors import ListedColormap, LogNorm, SymLogNorm
 
 import numpy as np
 
@@ -58,9 +58,17 @@ def plot_mosaic(mosaic, outfile, node_ranks):
 
     cmap = cm.plasma_r
     cmap.set_under(color="white")
-    M = mosaic_to_mat(mosaic, SHIFT)
-    plt.matshow(M, cmap=cmap,
-                norm=LogNorm(vmin=vmin(M, 10*SHIFT)))
+    if not isinstance(mosaic, np.ndarray):
+        M = mosaic_to_mat(mosaic, SHIFT)
+    else:
+        M = mosaic
+    if (np.amin(M) < 0):
+        plt.matshow(M, cmap="RdBu_r",
+                    norm=SymLogNorm(linthresh=SHIFT))
+    else:
+        plt.matshow(M, cmap=cmap,
+                    norm=LogNorm(vmin=vmin(M, 10*SHIFT)))
+        
     plt.colorbar()
     plt.xlabel("Destination")
     plt.ylabel("Source")
@@ -164,8 +172,17 @@ def report(ratios):
         rstd = np.std(ratios[n])
 
         print(f"Node {n}: {rmin:.6e}, {rmax:.6e}, {rmean:.6e}, {rstd:.6e}")
-        
-def main(infile, node_ranks, outfile, mode):
+
+def delta_mosaic(ref_mosaic, test_mosaic):
+    """ Compute the difference between two mosaics. """
+
+    if (len(ref_mosaic) != len(test_mosaic)):
+        msg = "Communications matrices must be the same size!"
+        raise RuntimeError(msg)
+
+    return mosaic_to_mat(ref_mosaic, SHIFT) - mosaic_to_mat(test_mosaic, SHIFT)
+
+def main(infile, node_ranks, outfile, mode, secondary):
     """ Given a csv-formatted Apprentice2 mosaic and nodes of size n, compute the on-node/off-node
     ratio. """
 
@@ -178,7 +195,12 @@ def main(infile, node_ranks, outfile, mode):
     else:
         if (outfile == None):
             raise RuntimeError("You need to provide an outfile to plot to!")
-        plot_mosaic(mosaic, outfile, node_ranks)
+        if (mode == "delta"):
+            test_mosaic = read_mosaic(secondary)
+            delta = delta_mosaic(mosaic, test_mosaic)
+            plot_mosaic(delta, outfile, node_ranks)
+        else:
+            plot_mosaic(mosaic, outfile, node_ranks)
     
 if __name__ == "__main__":
 
@@ -198,6 +220,12 @@ if __name__ == "__main__":
                         type=str,
                         required=False,
                         default="ratio",
-                        help="The mode (plot|ratio) - plot plots the mosaic, ratio computes the on-node fraction of the metric.")
+                        help="The mode (plot|ratio|delta) - plot plots the mosaic, ratio computes the on-node fraction of the metric, delta plots the difference of two mosaics.")
+    parser.add_argument("-s",
+                        dest='secondary',
+                        type=str,
+                        required=False,
+                        default=None,
+                        help="A second mosaic to compare against the input, for use with 'delta' mode.")
     args = parser.parse_args()
-    main(args.input, args.node_ranks, args.outfile, args.mode)
+    main(args.input, args.node_ranks, args.outfile, args.mode, args.secondary)
