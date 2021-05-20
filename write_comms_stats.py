@@ -30,10 +30,6 @@ def main(argv):
             outputfile = arg
         elif opt in ("-n", "--nprocs"):
             nprocs = arg
-    print('Input graph is ', inputgraph)
-    print('Input parition is ', inputpartition)
-    print('Output file is ', outputfile)
-    print('Nprocs is ', int(nprocs))
     
     ranks = int(nprocs)
     procs = np.arange(ranks)
@@ -69,7 +65,6 @@ def main(argv):
                 if core_comms[i][j] != 0:
                     print(i,",",j,",",int(core_comms[i][j]),sep='',file=f)
 
-    print(core_comms)
-    
+
 if __name__ == "__main__":
    main(sys.argv[1:])
