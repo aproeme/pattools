@@ -43,8 +43,10 @@ def main(argv):
     adj = graph[1:,0:]
     
     partition = df2.to_numpy()
-    numcores = partition.max()+1
-    core_comms = np.zeros((numcores,numcores))
+    if partition.max() == ranks:
+        partition = partition - 1
+
+    core_comms = np.zeros((ranks,ranks))
     
     for i in range(0,vertices):
         loc = int(partition[i]) # current location
