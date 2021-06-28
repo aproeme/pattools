@@ -63,7 +63,7 @@ def genDotStr(cgdict):
 
     return dotstr
 
-def readCGcsv(filename):
+def readCGcsv(filename, levels):
     """ Read a .csv file of a callgraph into a dictionary keyed by callgraph level. """
 
     cgdict = {}
@@ -72,15 +72,16 @@ def readCGcsv(filename):
 
         for row in cgreader:
             lvl = int(row['Level'])
-            cost = row[r'Samp%']
-            fname = row[r'Calltree/PE=HIDE']
+            if (lvl < levels) or (levels <= 0):
+                cost = row[r'Samp%']
+                fname = row[r'Calltree/PE=HIDE']
 
-            node = CGNode(fname, cost)
-            if lvl not in cgdict.keys():
-                cgdict[lvl] = []
-            cgdict[lvl].append(node)
-            if lvl > 0:
-                cgdict[lvl - 1][-1].addCallee(node)
+                node = CGNode(fname, cost)
+                if lvl not in cgdict.keys():
+                    cgdict[lvl] = []
+                cgdict[lvl].append(node)
+                if lvl > 0:
+                    cgdict[lvl - 1][-1].addCallee(node)
 
     return cgdict
 
@@ -96,10 +97,10 @@ def genCGcsv(filename):
 
     return cgname
 
-def main(infile, outfile):
+def main(infile, outfile, levels):
     """ Given a csv-formatted CrayPAT callgraph, generate a .dot file of the callgraph. """
     cgname = genCGcsv(infile)
-    cgdict = readCGcsv(cgname)
+    cgdict = readCGcsv(cgname, levels)
     dotstr = genDotStr(cgdict)
 
     with open(outfile, "w") as cgdot:
@@ -112,5 +113,11 @@ if __name__ == "__main__":
                         type=str,
                         required=True,
                         help="The file to write dot file to.")
+    parser.add_argument("-l",
+                        dest='levels',
+                        type=int,
+                        required=False,
+                        default=0,
+                        help="How many levels of call tree to show? <= 0 shows all (default).")
     args = parser.parse_args()
-    main(args.input, args.output)
+    main(args.input, args.output, args.levels)

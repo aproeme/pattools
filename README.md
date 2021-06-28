@@ -81,6 +81,9 @@ The dot file can then be used to create a graphical callgraph in multiple format
 dot -Tpng -o prog.png prog.dot
 ```
 
+For very large call graphs it may be useful to show only the first `n` levels, `pat2dot.py` supports
+this by optionally passing `-l n` for integer `n`, by default all levels are shown.
+
 ### Measuring communication ratios
 
 After running `pat_report` the profile directory can be opened in Apprentice2 (`app2` on the command
