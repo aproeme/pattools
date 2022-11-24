@@ -89,7 +89,7 @@ def genCGcsv(filename):
     """ Read a csv-formatted CrayPAT callgraph and write out as .csv file """
 
     cgtable = getTables(filename)
-    cgname = cgtable.keys()[0]
+    cgname = list(cgtable.keys())[0]
     cgstr = cgtable[cgname]
 
     with open(cgname, "w") as cgcsv:
